@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title> Group 4 Milestone 1 </title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- CSS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+<div class="glass">
+
+  <!-- file prompt shown when the page opens -->
+  <div id="overlay">
+    <div class="dialog">
+      <h3>Select a LOLCode file</h3>
+      <p>Choose a .lol file to load it into the text editor.</p>
+      <div class="drop" id="dropZone">
+        Drop a .lol file here or click to browse
+        <small id="dropMsg"></small>
+      </div>
+      <button id="skipBtn">Skip, I will type my code</button>
+    </div>
+  </div>
+
+  <!-- header: brand + file explorer (1u1) -->
+  <div class="top">
+    <div class="brand">4UOnly <em>LOLCode</em></div>
+    <div class="nav">
+      <span id="fileName">(None)</span>
+      <label for="fileInput">Open File</label>
+      <input type="file" id="fileInput" accept=".lol,.txt">
+    </div>
+  </div>
+
+  <div class="hero">
+    <h1>LOLCode<span>Interpreter</span></h1>
+    <div class="badge">Milestone 1<br>Lexical Analyzer</div>
+  </div>
+
+  <div class="grid">
+    <!-- text editor (2m2) -->
+    <div class="panel">
+      <h2>Text Editor</h2>
+      <textarea id="editor" spellcheck="false" placeholder="Open a .lol file or type your code here..."></textarea>
+    </div>
+
+    <!-- list of tokens (3_3) -->
+    <div class="panel">
+      <h2>Lexemes</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Lexeme</th><th>Classification</th><th>Line</th></tr></thead>
+          <tbody id="tokenBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- symbol table (4u4) -->
+    <div class="panel">
+      <h2>Symbol Table</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Identifier</th><th>Value</th></tr></thead>
+          <tbody id="symbolBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- execute button (5) -->
+  <div class="runbar">
+    <button id="runBtn" title="Execute">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 5 16 12 9 19"></polyline></svg>
+    </button>
+    <span class="label">Execute</span>
+    <span id="status"></span>
+  </div>
+
+  <!-- console (6) -->
+  <div class="panel">
+    <h2>Console</h2>
+    <div id="console"></div>
+  </div>
+
+  <div class="foot">&copy; 4UOnly &middot; CMSC 124 &middot; UPLB 2026</div>
+</div>
+
+<!-- Javascript -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+</body>
+</html>
