@@ -73,10 +73,10 @@ KEYWORDS = [
     ("GIMMEH","Input Keyword"),
     ("O RLY?","If Keyword"),
     ("YA RLY","If Keyword"),
-    ("MEBBE","ELse-If Keyword"),
+    ("MEBBE","Else-If Keyword"),
     ("NO WAI","Else Keyword"),
     ("OIC","Flow Control End"),
-    ("WTF?","Switch Control End"),
+    ("WTF?","Switch Keyword"),
     ("OMG","Case Keyword"),
     ("OMGWTF","Default Case Keyword"),
     ("IM IN YR","Loop Start"),
@@ -152,6 +152,8 @@ def tokenize(cleaned_lines):
 
         else:   # test_text unidentified
           end = pos
+          if text[pos] == '"':          # unclosed string: take the rest of the line
+            end = len(text)
           while end < len(text) and text[end] != " ":
             end += 1
           lexeme = text[pos:end]
@@ -165,35 +167,84 @@ def tokenize(cleaned_lines):
 Token validation
 '''
 def validation(tokens):
-  error_cnt = 0
+  errors = []
 
-  print("\n========================================================================\n")
   for lexeme, classification, line in tokens:
     if classification == "Unidentified":
-      error_cnt += 1
 
       # unclosed quotation
       if lexeme.startswith('"') and not lexeme.endswith('"'):
-        print(f"[Line {line}] Syntax Error: Unclosed string literal '{lexeme}'")
+        reason = "Unclosed string literal"
 
       # more than one decimal point
       elif "." in lexeme and lexeme.count(".") > 1:
-        print(f"[Line {line}] Syntax Error: Invalid decimal declaration '{lexeme}'")
+        reason = "Invalid decimal declaration"
 
       # invalid decimal point placement
       elif lexeme.endswith(".") or (lexeme.startswith(".") and len(lexeme) == 2 and lexeme[1].isdigit()):
-        print(f"[Line {line}] Syntax Error: Invalid decimal declaration '{lexeme}'")
+        reason = "Invalid decimal declaration"
 
       # literal starts with num (ex. 3num)
       elif any(char.isdigit() for char in lexeme) and any(char.isalpha() for char in lexeme):
-        print(f"[Line {line}] Syntax Error: Invalid literal or identifier '{lexeme}'")
+        reason = "Invalid literal or identifier"
 
       # special char w/o quotations
       elif not lexeme.isalnum() and not lexeme.startswith('"'):
-        print(f"[Line {line}] Syntax Error: Invalid symbol or unexpected token '{lexeme}'")
+        reason = "Invalid symbol or unexpected token"
 
       # default case
       else:
-        print(f"[Line {line}] Syntax Error: Unidentified token '{lexeme}'")
+        reason = "Unidentified token"
 
-  print(f"\nTotal errors found: {error_cnt}")
+      errors.append(f"[Line {line}] Lexical Error: {reason} '{lexeme}'")
+
+  return errors
+
+
+'''
+Comment Error Checking
+- OBTW and TLDR must be on their own lines (specs)
+- every OBTW needs a TLDR, every TLDR needs an OBTW
+'''
+
+def find_keyword(word, line):
+  # position of word in line (whole word, not inside a string), or -1
+  for m in re.finditer(r'\b' + word + r'\b', line):
+    if line[:m.start()].count('"') % 2 == 0:   # even quotes before it = outside a string
+      return m.start()
+  return -1
+
+def check_comments(code):
+  errors = []
+  inside_comment = False
+  obtw_line = 0
+  for line_number, line in enumerate(code.splitlines(), start = 1):
+    if not inside_comment:
+      btw = find_keyword("BTW", line)
+      if btw != -1:
+        line = line[:btw]                      # ignore BTW comments
+      obtw = find_keyword("OBTW", line)
+      tldr = find_keyword("TLDR", line)
+      if obtw != -1:
+        if line[:obtw].strip():
+          errors.append(f"[Line {line_number}] Lexical Error: OBTW must be on its own line")
+        if tldr != -1:
+          errors.append(f"[Line {line_number}] Lexical Error: TLDR must be on its own line")
+        else:
+          inside_comment = True
+          obtw_line = line_number
+      elif tldr != -1:
+        errors.append(f"[Line {line_number}] Lexical Error: TLDR without OBTW")
+    else:
+      tldr = find_keyword("TLDR", line)
+      if tldr != -1:
+        inside_comment = False
+        after = line[tldr + 4:]
+        btw = find_keyword("BTW", after)
+        if btw != -1:
+          after = after[:btw]
+        if after.strip():
+          errors.append(f"[Line {line_number}] Lexical Error: code after TLDR is not allowed")
+  if inside_comment:
+    errors.append(f"[Line {obtw_line}] Lexical Error: OBTW has no matching TLDR")
+  return errors
