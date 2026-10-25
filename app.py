@@ -6,7 +6,7 @@ import io
 from flask import Flask, jsonify, request, render_template
 
 from analyzers.lexical_analyzer import preprocess, tokenize, validation, check_comments
-# from analyzers.syntax_analyzer import parse   # Milestone 2
+from analyzers.syntax_analyzer import parse   # Milestone 2
 
 HOST = '127.0.0.1'
 PORT = 5000     # ngrok http 5000
@@ -29,6 +29,9 @@ def run():
 
   # Validation: returns a list of lexical errors
   lexical_errors = comment_errors + validation(tokens)
+  syntax_errors = []
+  if tokens and not lexical_errors:
+    syntax_errors = parse(tokens)
 
   # (3_3) list of tokens
   token_list = []
@@ -48,14 +51,19 @@ def run():
     console_text = "Nothing to analyze (>n<)"
   else:
     console_text = "Lexical analysis finished: " + str(len(tokens)) + " lexemes found! (UwU)\n"
-    console_text += "Total errors found: " + str(len(lexical_errors))
+    console_text += "Lexical errors found: " + str(len(lexical_errors))
     if lexical_errors:
       console_text += "\n\n" + "\n".join(lexical_errors)
+      console_text += "\n\nSyntax analysis skipped: fix the lexical errors first."
+    elif syntax_errors:
+      console_text += "\n\nSyntax analysis: errors found\n" + "\n".join(syntax_errors)
+    else:
+      console_text += "\n\nSyntax analysis finished: no syntax errors!"
 
   return jsonify({
       "tokens": token_list,
       "symbols": symbol_list,
-      "errors": len(lexical_errors),
+      "errors": len(lexical_errors) + len(syntax_errors),
       "console": console_text,
   })
 
