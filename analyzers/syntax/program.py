@@ -1,48 +1,40 @@
 from analyzers.syntax.helpers import peek, advance, error, expect, expect_class, parse_linebreak, not_written
-from analyzers.syntax import expressions, flow_control, functions
+from analyzers.syntax import expressions, statements, functions
 
 
-def parse_code_block(parser):
-  # <code_block> ::= ε | <statement> <linebreak> <statements>
-  not_written(parser, "parse_code_block")
+def parse_program(parser):
+  # <program> ::= <comments> <functions> HAI <linebreak> <var_section>
+  #               <code_block> KTHXBYE <linebreak> <functions>
+  # (<comments> is already removed by the lexer)
+  not_written(parser, "parse_program")
 
 
-def parse_statements(parser):
-  # <statements> ::= <statement> <linebreak> <statements> | <statement> <linebreak>
-  not_written(parser, "parse_statements")
+def parse_functions(parser):
+  # <functions> ::= ε | <func_def> <linebreak> <functions>
+  # may be EMPTY (ε): if the next token doesn't start it, do nothing
+  # LIST RULE: repeat with a while loop, NOT by calling this function again
+  not_written(parser, "parse_functions")
 
 
-def parse_statement(parser):
-  # <statement> ::= <print> | <input> | <assignment> | <expression> | <if_then>
-  #               | <switch> | <loop> | <recast> | <func_def> | <func_return>
-  #               | <break>
-  not_written(parser, "parse_statement")
-
-def parse_print(parser):
-  # <print> ::= VISIBLE <print_args>
-  not_written(parser, "parse_print")
+def parse_var_section(parser):
+  # <var_section> ::= ε | WAZZUP <linebreak> <declarations> BUHBYE <linebreak>
+  # may be EMPTY (ε): if the next token doesn't start it, do nothing
+  not_written(parser, "parse_var_section")
 
 
-def parse_print_args(parser):
-  # <print_args> ::= <expression> | <expression> + <print_args>
-  not_written(parser, "parse_print_args")
+def parse_declarations(parser):
+  # <declarations> ::= ε | <declaration> <linebreak> <declarations>
+  # may be EMPTY (ε): if the next token doesn't start it, do nothing
+  # LIST RULE: repeat with a while loop, NOT by calling this function again
+  not_written(parser, "parse_declarations")
 
 
-def parse_input(parser):
-  # <input> ::= GIMMEH varident
-  not_written(parser, "parse_input")
+def parse_declaration(parser):
+  # <declaration> ::= I HAS A varident | I HAS A varident <init>
+  not_written(parser, "parse_declaration")
 
 
-def parse_assignment(parser):
-  # <assignment> ::= varident R <expression>
-  not_written(parser, "parse_assignment")
-
-
-def parse_recast(parser):
-  # <recast> ::= varident IS NOW A type
-  not_written(parser, "parse_recast")
-
-
-def parse_break(parser):
-  # <break> ::= GTFO
-  not_written(parser, "parse_break")
+def parse_init(parser):
+  # <init> ::= ε | ITZ <expression>
+  # may be EMPTY (ε): if the next token doesn't start it, do nothing
+  not_written(parser, "parse_init")
