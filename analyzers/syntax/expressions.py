@@ -1,6 +1,9 @@
 from analyzers.syntax.helpers import peek, advance, error, expect, expect_class, not_written
 from analyzers.syntax import functions
 
+def is_expression_start(parser):
+  not_written(parser, "is_expression_start")
+
 def parse_expression(parser):
   # <expression> ::= <operand> | <concat> | <infinite_bool>
   not_written(parser, "parse_expression")

@@ -3,8 +3,14 @@ from analyzers.syntax import expressions, flow_control, functions
 
 def parse_code_block(parser):
   # <code_block> ::= ε | <statement> <linebreak> <statements>
-  # <statements> ::= <statement> <linebreak> <statements> | <statement> <linebreak>
+  # may be EMPTY (ε): if the next token doesn't start it, do nothing
   not_written(parser, "parse_code_block")
+
+
+def parse_statements(parser):
+  # <statements> ::= <statement> <linebreak> <statements> | <statement> <linebreak>
+  not_written(parser, "parse_statements")
+
 
 def parse_statement(parser):
   # <statement> ::= <print> | <input> | <assignment> | <expression> | <if_then>
@@ -14,9 +20,13 @@ def parse_statement(parser):
 
 
 def parse_print(parser):
-  # <print>      ::= VISIBLE <print_args>
-  # <print_args> ::= <expression> | <expression> + <print_args>
+  # <print> ::= VISIBLE <print_args>
   not_written(parser, "parse_print")
+
+
+def parse_print_args(parser):
+  # <print_args> ::= <expression> | <expression> + <print_args>
+  not_written(parser, "parse_print_args")
 
 
 def parse_input(parser):
