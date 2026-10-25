@@ -40,6 +40,12 @@ def peek(parser):
     last_line = 1
   return ("end of file", "EOF", last_line)  # incase end of file is reached but there is still token to be expected, extra token for expect() has someting to expect  
 
+def peek_next(parser):
+  # see the next token (used in assignement and recast)
+  next_position = parser["position"] + 1
+  if next_position < len(parser["tokens"]):
+    return parser["tokens"][next_position]
+  return ("end of file", "EOF", peek(parser)[2])
 
 def advance(parser):
   # proceed to the next token to be parsed, returns the token we just parsed
