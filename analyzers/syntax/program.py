@@ -6,7 +6,7 @@ def parse_program(parser):
   # <program> ::= <comments> <functions> HAI <linebreak> <var_section>
   #               <code_block> KTHXBYE <linebreak> <functions>
   # (<comments> is already removed by the lexer)
-  parse_functions(parser)
+  parse_functions(parser) 
   expect(parser, "HAI")
   parse_linebreak(parser)
   parse_var_section(parser)

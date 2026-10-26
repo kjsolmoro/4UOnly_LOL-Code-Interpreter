@@ -61,14 +61,14 @@ def error(parser, message):
 
 
 def expect(parser, lexeme):
-  # see if the next expected token follows the grammar. error() if expected token is not met, advance() if the expected is satisfied
+  # see if this is the token that we expect (based on the grammar). error() if expected token is not met, advance() if the expected is satisfied
   if peek(parser)[0] != lexeme:
     error(parser, f"expected '{lexeme}'")
   return advance(parser)
 
 
 def expect_class(parser, classification, description):
-  # see if the next expected kind of token follows the grammar. error() if expected token is not met, advance() if the expected is satisfied
+  # see if this is the kind of token that we expect (based on the grammar). error() if expected token is not met, advance() if the expected is satisfied
   if peek(parser)[1] != classification:
     error(parser, f"expected {description}")
   return advance(parser)
