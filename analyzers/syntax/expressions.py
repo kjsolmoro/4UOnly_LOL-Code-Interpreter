@@ -6,14 +6,42 @@ def is_expression_start(parser):
 
 def parse_expression(parser):
   # <expression> ::= <operand> | <concat> | <infinite_bool>
-  not_written(parser, "parse_expression")
+  token = peek() 
 
-
+  if token == "SMOOSH":
+      return parse_concat()
+  elif token in ["ALL OF", "ANY OF"]:
+      return parse_infinite_bool()
+  else: 
+      return parse_operand()
+  
 def parse_operand(parser):
   # <operand> ::= varident | <literal> | <arithmetic> | <boolean>
   #             | <comparison> | <typecast> | <func_call>
-  not_written(parser, "parse_operand")
+  token = peek()
 
+  if token in ["NUMBR", "NUMBAR", "YARN", "TROOF"]:
+      return parse_literal()
+  elif token == "varident":
+      return consume("varident")
+
+  elif token in ["SUM OF", "DIFF OF", "PRODUKT OF", "QUOSHUNT OF", "MOD OF", "BIGGR OF", "SMALLR OF"]:
+      return parse_arithmetic()
+
+  elif token in ["BOTH OF", "EITHER OF", "WON OF", "NOT"]:
+      return parse_boolean()
+
+  elif token in ["BOTH SAEM", "DIFFRINT"]:
+      return parse_comparison()
+
+  elif token == "MAEK":
+      return parse_typecast()
+
+  elif token == "I IZ":
+      pass 
+
+  else: 
+      raise SyntaxError(f"Expected an operand, but got {token}")
 
 def parse_literal(parser):
   # <literal> ::= numbr | numbar | yarn | troof
