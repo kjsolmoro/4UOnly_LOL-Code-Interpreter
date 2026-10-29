@@ -105,29 +105,54 @@ def parse_bool_op(parser):
 
 def parse_comparison(parser):
   # <comparison> ::= <comp_op> <operand> AN <operand>
-  not_written(parser, "parse_comparison")
+  op = parse_comp_op(parser)
+  left = parse_operand(parser)
+  expect(parser, "AN")
+  right = parse_operand(parser)
+  return {"type": "comparison", "operator": op, "left": left, "right": right}
 
 
 def parse_comp_op(parser):
   # <comp_op> ::= BOTH SAEM | DIFFRINT
-  not_written(parser, "parse_comp_op")
+  token = peek(parser)
+  if token in ["BOTH SAEM", "DIFFRINT"]:
+      return advance(parser)
+  error(parser, f"Expected comparison operator, got: {token}")
 
 
 def parse_infinite_bool(parser):
   # <infinite_bool> ::= ALL OF <operand_list> MKAY | ANY OF <operand_list> MKAY
-  not_written(parser, "parse_infinite_bool")
+  op = advance(parser)
+  operands = parse_operand_list(parser)
+  return {"type": "infinite_bool", "operator": op, "operands": operands}
 
 
 def parse_concat(parser):
   # <concat> ::= SMOOSH <operand_list>
-  not_written(parser, "parse_concat")
+  expect(parser, "SMOOSH")
+  operands = parse_operand_list(parser)
+  return {"type": "concat", "operands": operands}
 
 
 def parse_operand_list(parser):
   # <operand_list> ::= <operand> AN <operand> | <operand> AN <operand_list>
-  not_written(parser, "parse_operand_list")
+  operands = []
 
+  operands.append(parse_operand(parser))
+
+  while peek(parser) == "AN": 
+    expect(parser, "AN")
+    operands.append(parse_operand(parser))
+
+  return operands
 
 def parse_typecast(parser):
   # <typecast> ::= MAEK <operand> A type | MAEK <operand> type
-  not_written(parser, "parse_typecast")
+  expect(parser, "MAEK")
+  operand = parse_operand(parser)
+    
+  if peek(parser) == "A":
+       expect(parser, "A")
+        
+  target_type = advance(parser) 
+  return {"type": "typecast", "operand": operand, "target_type": target_type}
