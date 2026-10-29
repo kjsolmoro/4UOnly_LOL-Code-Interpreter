@@ -57,18 +57,26 @@ def parse_operand(parser):
 
 def parse_literal(parser):
   # <literal> ::= numbr | numbar | yarn | troof
-  not_written(parser, "parse_literal")
-
-
+  token = peek(parser)
+  if token in ["NUMBR", "NUMBAR", "YARN", "TROOF"]:
+      return advance(parser)
+  
 def parse_arithmetic(parser):
   # <arithmetic> ::= <arith_op> <operand> AN <operand>
-  not_written(parser, "parse_arithmetic")
+  op = parse_arith_op(parser)
+  left = parse_operand(parser)
+  expect(parser, "AN")
+  right = parse_operand(parser)
+  return {"type": "arithmetic", "op": op, "left": left, "right": right}
 
 
 def parse_arith_op(parser):
   # <arith_op> ::= SUM OF | DIFF OF | PRODUKT OF | QUOSHUNT OF | MOD OF
   #              | BIGGR OF | SMALLR OF
-  not_written(parser, "parse_arith_op")
+  token = peek(parser)
+  if token in ["SUM OF", "DIFF OF", "PRODUKT OF", "QUOSHUNT OF", "MOD OF", "BIGGR OF", "SMALLR OF"]:
+       return advance(parser)
+  error(parser, f"Expected arithmetic operator, got: {token}")
 
 
 def parse_boolean(parser):
