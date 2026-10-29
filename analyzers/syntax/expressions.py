@@ -2,11 +2,23 @@ from analyzers.syntax.helpers import peek, advance, error, expect, expect_class,
 from analyzers.syntax import functions
 
 def is_expression_start(parser):
-  not_written(parser, "is_expression_start")
+
+  token = peek(parser)
+
+  valid_starts = [
+     "SMOOSH", "ALL OF", "ANY OF",
+     "NUMBR", "NUMBAR", "YARN", "TROOF", "varident",
+     "SUM OF", "DIFF OF", "PRODUKT OF", "QUOSHUNT OF", "MOD OF", "BIGGR OF", "SMALLR OF",
+     "BOTH OF", "EITHER OF", "WON OF", "NOT",
+      "BOTH SAEM", "DIFFRINT",
+      "MAEK", "I IZ"
+    ]
+  
+  return token in valid_starts
 
 def parse_expression(parser):
   # <expression> ::= <operand> | <concat> | <infinite_bool>
-  token = peek() 
+  token = peek(parser)
 
   if token == "SMOOSH":
       return parse_concat()
@@ -18,7 +30,7 @@ def parse_expression(parser):
 def parse_operand(parser):
   # <operand> ::= varident | <literal> | <arithmetic> | <boolean>
   #             | <comparison> | <typecast> | <func_call>
-  token = peek()
+  token = peek(parser)
 
   if token in ["NUMBR", "NUMBAR", "YARN", "TROOF"]:
       return parse_literal()
