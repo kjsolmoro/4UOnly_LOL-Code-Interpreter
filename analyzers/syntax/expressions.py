@@ -21,11 +21,11 @@ def parse_expression(parser):
   token = peek(parser)
 
   if token == "SMOOSH":
-      return parse_concat()
+      return parse_concat(parser)
   elif token in ["ALL OF", "ANY OF"]:
-      return parse_infinite_bool()
+      return parse_infinite_bool(parser)
   else: 
-      return parse_operand()
+      return parse_operand(parser)
   
 def parse_operand(parser):
   # <operand> ::= varident | <literal> | <arithmetic> | <boolean>
@@ -33,21 +33,21 @@ def parse_operand(parser):
   token = peek(parser)
 
   if token in ["NUMBR", "NUMBAR", "YARN", "TROOF"]:
-      return parse_literal()
+      return parse_literal(parser)
   elif token == "varident":
-      return consume("varident")
+      return advance(parser)
 
   elif token in ["SUM OF", "DIFF OF", "PRODUKT OF", "QUOSHUNT OF", "MOD OF", "BIGGR OF", "SMALLR OF"]:
-      return parse_arithmetic()
+      return parse_arithmetic(parser)
 
   elif token in ["BOTH OF", "EITHER OF", "WON OF", "NOT"]:
-      return parse_boolean()
+      return parse_boolean(parser)
 
   elif token in ["BOTH SAEM", "DIFFRINT"]:
-      return parse_comparison()
+      return parse_comparison(parser)
 
   elif token == "MAEK":
-      return parse_typecast()
+      return parse_typecast(parser)
 
   elif token == "I IZ":
       pass 
