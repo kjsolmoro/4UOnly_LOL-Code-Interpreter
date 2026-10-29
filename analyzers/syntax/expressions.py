@@ -3,7 +3,10 @@ from analyzers.syntax import functions
 
 def is_expression_start(parser):
 
-  token = peek(parser)
+  if parser["position"] >= len(parser["tokens"]):
+      return False
+  
+  token, classification, _ = peek(parser)
 
   valid_starts = [
      "SMOOSH", "ALL OF", "ANY OF",
@@ -14,11 +17,11 @@ def is_expression_start(parser):
       "MAEK", "I IZ"
     ]
   
-  return token in valid_starts
+  return token in valid_starts or classification in ["NUMBR Literal", "NUMBAR Literal", "YARN Literal", "TROOF Literal", "Variable Identifier"]
 
 def parse_expression(parser):
   # <expression> ::= <operand> | <concat> | <infinite_bool>
-  token = peek(parser)
+  token, classification, _ = peek(parser)
 
   if token == "SMOOSH":
       return parse_concat(parser)
@@ -30,11 +33,11 @@ def parse_expression(parser):
 def parse_operand(parser):
   # <operand> ::= varident | <literal> | <arithmetic> | <boolean>
   #             | <comparison> | <typecast> | <func_call>
-  token = peek(parser)
+  token, classification, _ = peek(parser)
 
-  if token in ["NUMBR", "NUMBAR", "YARN", "TROOF"]:
+  if classification in ["NUMBR Literal", "NUMBAR Literal", "YARN Literal", "TROOF Literal"]:
       return parse_literal(parser)
-  elif token == "varident":
+  elif classification == "Variable Identifier":
       return advance(parser)
 
   elif token in ["SUM OF", "DIFF OF", "PRODUKT OF", "QUOSHUNT OF", "MOD OF", "BIGGR OF", "SMALLR OF"]:
@@ -53,13 +56,14 @@ def parse_operand(parser):
       pass 
 
   else: 
-      raise SyntaxError(f"Expected an operand, but got {token}")
+      if token == "\n":
+          error(parser, "Expected an operand, but found end of line")
+      else:
+          error(parser, f"Expected an operand, but got '{token}'")
 
 def parse_literal(parser):
   # <literal> ::= numbr | numbar | yarn | troof
-  token = peek(parser)
-  if token in ["NUMBR", "NUMBAR", "YARN", "TROOF"]:
-      return advance(parser)
+  return advance(parser)
   
 def parse_arithmetic(parser):
   # <arithmetic> ::= <arith_op> <operand> AN <operand>
@@ -73,7 +77,7 @@ def parse_arithmetic(parser):
 def parse_arith_op(parser):
   # <arith_op> ::= SUM OF | DIFF OF | PRODUKT OF | QUOSHUNT OF | MOD OF
   #              | BIGGR OF | SMALLR OF
-  token = peek(parser)
+  token, _, _ = peek(parser)
   if token in ["SUM OF", "DIFF OF", "PRODUKT OF", "QUOSHUNT OF", "MOD OF", "BIGGR OF", "SMALLR OF"]:
        return advance(parser)
   error(parser, f"Expected arithmetic operator, got: {token}")
@@ -81,7 +85,7 @@ def parse_arith_op(parser):
 
 def parse_boolean(parser):
   # <boolean> ::= <bool_op> <operand> AN <operand> | NOT <operand>
-  token = peek(parser)
+  token, _, _ = peek(parser)
   if token == "NOT": 
      op = advance(parser)
      operand = parse_operand(parser)
@@ -97,7 +101,7 @@ def parse_boolean(parser):
 
 def parse_bool_op(parser):
   # <bool_op> ::= BOTH OF | EITHER OF | WON OF
-  token = peek(parser)
+  token, _, _ = peek(parser)
   if token in ["BOTH OF", "EITHER OF", "WON OF"]: 
      return advance(parser)
   error(parser, f"Expected boolean operator, got: {token}")
@@ -114,7 +118,7 @@ def parse_comparison(parser):
 
 def parse_comp_op(parser):
   # <comp_op> ::= BOTH SAEM | DIFFRINT
-  token = peek(parser)
+  token, _, _ = peek(parser)
   if token in ["BOTH SAEM", "DIFFRINT"]:
       return advance(parser)
   error(parser, f"Expected comparison operator, got: {token}")
@@ -124,6 +128,7 @@ def parse_infinite_bool(parser):
   # <infinite_bool> ::= ALL OF <operand_list> MKAY | ANY OF <operand_list> MKAY
   op = advance(parser)
   operands = parse_operand_list(parser)
+  expect(parser, "MKAY")
   return {"type": "infinite_bool", "operator": op, "operands": operands}
 
 
@@ -140,7 +145,10 @@ def parse_operand_list(parser):
 
   operands.append(parse_operand(parser))
 
-  while peek(parser) == "AN": 
+  while parser["position"] < len(parser["tokens"]):
+    token, _, _ = peek(parser)
+    if token != "AN":
+      break
     expect(parser, "AN")
     operands.append(parse_operand(parser))
 
@@ -150,8 +158,9 @@ def parse_typecast(parser):
   # <typecast> ::= MAEK <operand> A type | MAEK <operand> type
   expect(parser, "MAEK")
   operand = parse_operand(parser)
-    
-  if peek(parser) == "A":
+
+  token, _, _ = peek(parser)
+  if token == "A":
        expect(parser, "A")
         
   target_type = advance(parser) 
