@@ -81,12 +81,26 @@ def parse_arith_op(parser):
 
 def parse_boolean(parser):
   # <boolean> ::= <bool_op> <operand> AN <operand> | NOT <operand>
-  not_written(parser, "parse_boolean")
+  token = peek(parser)
+  if token == "NOT": 
+     op = advance(parser)
+     operand = parse_operand(parser)
+     return {"type": "boolean_unary", "operator": op, "operand": operand}
+  else:
+      op = parse_bool_op(parser)
+      left = parse_operand(parser)
+      expect(parser, "AN")
+      right = parse_operand(parser)
+      return {"type": "boolean_binary", "operator": op, "left": left, "right": right}
+
 
 
 def parse_bool_op(parser):
   # <bool_op> ::= BOTH OF | EITHER OF | WON OF
-  not_written(parser, "parse_bool_op")
+  token = peek(parser)
+  if token in ["BOTH OF", "EITHER OF", "WON OF"]: 
+     return advance(parser)
+  error(parser, f"Expected boolean operator, got: {token}")
 
 
 def parse_comparison(parser):
