@@ -57,9 +57,9 @@ def parse_operand(parser):
 
   else: 
       if token == "\n":
-          error(parser, "Expected an operand, but found end of line")
+          error(parser, "Expected an operand")
       else:
-          error(parser, f"Expected an operand, but got '{token}'")
+          error(parser, f"Expected an operand")
 
 def parse_literal(parser):
   # <literal> ::= numbr | numbar | yarn | troof
