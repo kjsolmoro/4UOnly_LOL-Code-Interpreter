@@ -63,6 +63,10 @@ def parse_operand(parser):
 
 def parse_literal(parser):
   # <literal> ::= numbr | numbar | yarn | troof
+  
+  # dinagdag ko langs for error handling
+  if peek(parser)[1] not in ["NUMBR Literal", "NUMBAR Literal", "YARN Literal", "TROOF Literal"]:
+    error(parser, "expected a literal")
   return advance(parser)
   
 def parse_arithmetic(parser):
