@@ -53,7 +53,7 @@ def parse_operand(parser):
       return parse_typecast(parser)
 
   elif token == "I IZ":
-      pass 
+      return functions.parse_func_call(parser)
 
   else: 
       if token == "\n":

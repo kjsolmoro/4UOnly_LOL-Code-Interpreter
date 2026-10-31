@@ -40,6 +40,7 @@ def parse_func_call(parser):
   expect_class(parser, "Function Identifier", "a function name")
   parse_args(parser)
   expect(parser, "MKAY")
+  return {"type": "func_call"}
 
 def parse_args(parser):
   # <args> ::= ε | <args_list>
