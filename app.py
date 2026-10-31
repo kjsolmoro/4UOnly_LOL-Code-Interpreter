@@ -27,26 +27,31 @@ def run():
   cleaned = preprocess(code)
   tokens = tokenize(cleaned)
 
-  # Validation: returns a list of lexical errors
-  lexical_errors = comment_errors + validation(tokens)
-  syntax_errors = []
-  if tokens and not lexical_errors:
-    syntax_errors = parse(tokens)
+  # # Validation: returns a list of lexical errors
+  # lexical_errors = comment_errors + validation(tokens)
+  # syntax_errors = []
+  # if tokens and not lexical_errors:
+  #   syntax_errors = parse(tokens)
 
   # (3_3) list of tokens
   token_list = []
   for lexeme, classification, line in tokens:
     token_list.append({"lexeme": lexeme, "classification": classification, "line": line})
 
-  # (4o4) symbol table : not needed yet
+  # (4o4) symbol table 
+  lexical_errors = comment_errors + validation(tokens)
+  syntax_errors = []
   symbol_list = []
-  seen = []
-  for lexeme, classification, line in tokens:
-    if classification == "Variable Identifier" and lexeme not in seen:
-      seen.append(lexeme)
-      symbol_list.append({"identifier": lexeme, "value": "non"})
+  # (PoP) If tokens exist, place an implicit IT variable but with NOOB val for now
+  if tokens:
+    symbol_list.append({"identifier": "IT", "value": "NOOB"})
+  # (Y-Y) Then we go to second checking if it goes thru w/o lexical errors, now checking for syntax errors which
+  #       is checked thru parse recursively and the stuff are appended to the symbol list as parse goes on
+  # Table stays empty if there is a lexical error kc we skipped the parsing 
+  if tokens and not lexical_errors:
+    syntax_errors = parse(tokens, symbol_list)
 
-  # console text (KoK)
+  # (5-5) console text (KoK)
   if len(tokens) == 0:
     console_text = "Nothing to analyze (>n<)"
   else:

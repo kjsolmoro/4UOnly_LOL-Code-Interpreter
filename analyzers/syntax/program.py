@@ -47,11 +47,40 @@ def parse_declarations(parser):
 def parse_declaration(parser):
   # <declaration> ::= I HAS A varident | I HAS A varident <init>
   expect(parser, "I HAS A")
-  expect_class(parser, "Variable Identifier", "a variable name")
-  parse_init(parser)
+  name = expect_class(parser, "Variable Identifier", "a variable name")
+  init = parse_init(parser)
+  add_symbol(parser, name, init)
 
 def parse_init(parser):
   # <init> ::= ε | ITZ <expression>
   if peek(parser)[0] == "ITZ":
     advance(parser)
-    expressions.parse_expression(parser)
+    return expressions.parse_expression(parser)
+  return None
+
+# (UwU) ========================================================================================
+# NEW Add Symbol function
+# Checks the tokens, set the value based on parse_expression returns, append to the symbol list
+# (UwU) ========================================================================================
+def add_symbol(parser, name_token, init):
+  value = "NOOB"
+  if init is None:                                  # no ITZ
+    value = "NOOB"
+  elif type(init) == dict:                          # SUM OF, SMOOSH, etc., 
+    value = "(expression)"                          # mag eevaluate ng expressions eh so I think milestone 3 na siya?
+  elif init[1] == "Variable Identifier":            # I HAS A x ITZ y
+    value = find_symbol_value(parser, init[0])
+  else:
+    value = init[0]
+  parser["symbols"].append({"identifier": name_token[0], "value": value})
+
+# helper! find symbol value
+# for already declared variables
+# I HAS A num ITZ 17
+# I HAS  copy ITZ num <-- finds num's value and places it in copy!
+def find_symbol_value(parser, name):
+  for symbol in parser["symbols"]:
+    if symbol["identifier"] == name:
+      return symbol["value"]
+  return "NOOB"                       # fallback for when var is never declared 
+                                      # for bext milestone na ren ata e2? since syntax plng nmn
