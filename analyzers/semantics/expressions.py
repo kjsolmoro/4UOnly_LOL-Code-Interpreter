@@ -1,8 +1,7 @@
 #==================================================================
 # Evaluates all expression AST nodes and returns (value, type_name)
 #==================================================================
-from analyzers.semantics.helpers import (LOLSemanticError,  declare_symbol,  get_symbol,  update_symbol,  to_troof,  to_yarn,  to_num,
-  cast_explicit, )
+from analyzers.semantics.helpers import (LOLSemanticError, get_symbol, to_troof, to_yarn, to_num, cast_explicit, )
 
 def evaluate_expression(interp, node):
   """Dispatches and evaluates any expression AST node."""
