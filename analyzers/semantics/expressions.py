@@ -116,3 +116,83 @@ def eval_arithmetic(interp, node):
   if is_float:
     return (float(res), "NUMBAR")
   return (int(res), "NUMBR")
+
+def eval_boolean_binary(interp, node):
+  op = _get_op_lexeme(node["operator"])
+  left_val, left_type = evaluate_expression(interp, node["left"])
+  right_val, right_type = evaluate_expression(interp, node["right"])
+
+  b1 = to_troof(left_val, left_type)
+  b2 = to_troof(right_val, right_type)
+
+  if op == "BOTH OF":
+    res = b1 and b2
+  elif op == "EITHER OF":
+    res = b1 or b2
+  elif op == "WON OF":
+    res = (b1 != b2)
+  else:
+    raise LOLSemanticError(f"Unknown boolean operator: '{op}'")
+
+  return (res, "TROOF")
+
+
+def eval_boolean_unary(interp, node):
+  operand_val, operand_type = evaluate_expression(interp, node["operand"])
+  b = to_troof(operand_val, operand_type)
+  return (not b, "TROOF")
+
+
+def eval_comparison(interp, node):
+  op = _get_op_lexeme(node["operator"])
+  left_val, left_type = evaluate_expression(interp, node["left"])
+  right_val, right_type = evaluate_expression(interp, node["right"])
+
+  # If both are numbers (NUMBR and/or NUMBAR), numeric comparison applies
+  if left_type in ["NUMBR", "NUMBAR"] and right_type in ["NUMBR", "NUMBAR"]:
+    equal = (left_val == right_val)
+  elif left_type != right_type:
+    # Mismatched non-numeric types are not equal
+    equal = False
+  else:
+    equal = (left_val == right_val)
+
+  if op == "BOTH SAEM":
+    return (equal, "TROOF")
+  elif op == "DIFFRINT":
+    return (not equal, "TROOF")
+  else:
+    raise LOLSemanticError(f"Unknown comparison operator: '{op}'")
+
+
+def eval_concat(interp, node):
+  # SMOOSH concatenates all operands after converting each to YARN
+  parts = []
+  for op_node in node["operands"]:
+    val, typ = evaluate_expression(interp, op_node)
+    parts.append(to_yarn(val, typ))
+  return ("".join(parts), "YARN")
+
+
+def eval_infinite_bool(interp, node):
+  op = _get_op_lexeme(node["operator"])
+  bool_values = []
+  for op_node in node["operands"]:
+    val, typ = evaluate_expression(interp, op_node)
+    bool_values.append(to_troof(val, typ))
+
+  if op == "ALL OF":
+    res = all(bool_values)
+  elif op == "ANY OF":
+    res = any(bool_values)
+  else:
+    raise LOLSemanticError(f"Unknown infinite bool operator: '{op}'")
+
+  return (res, "TROOF")
+
+
+def eval_typecast(interp, node):
+  val, typ = evaluate_expression(interp, node["operand"])
+  target_token = node["target_type"]
+  target_type = _get_op_lexeme(target_token)
+  return cast_explicit(val, typ, target_type)
