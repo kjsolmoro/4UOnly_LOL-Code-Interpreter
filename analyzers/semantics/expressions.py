@@ -67,3 +67,52 @@ def evaluate_expression(interp, node):
 
   else:
     raise LOLSemanticError(f"Unknown expression node type: {node_type}")
+
+# ======================================================================
+# INDIVIDUAL EXPRESSION EVALUATORS
+# ======================================================================
+
+def _get_op_lexeme(op_obj):
+  if isinstance(op_obj, (tuple, list)):
+    return op_obj[0]
+  return str(op_obj)
+
+
+def eval_arithmetic(interp, node):
+  op = _get_op_lexeme(node["op"])
+  left_val, left_type = evaluate_expression(interp, node["left"])
+  right_val, right_type = evaluate_expression(interp, node["right"])
+
+  n1, t1 = to_num(left_val, left_type)
+  n2, t2 = to_num(right_val, right_type)
+
+  # If at least one operand is NUMBAR, the result is NUMBAR
+  is_float = (t1 == "NUMBAR" or t2 == "NUMBAR")
+
+  if op == "SUM OF":
+    res = n1 + n2
+  elif op == "DIFF OF":
+    res = n1 - n2
+  elif op == "PRODUKT OF":
+    res = n1 * n2
+  elif op == "QUOSHUNT OF":
+    if n2 == 0:
+      raise LOLSemanticError("Division by zero in QUOSHUNT OF")
+    if is_float:
+      res = n1 / n2
+    else:
+      res = n1 // n2
+  elif op == "MOD OF":
+    if n2 == 0:
+      raise LOLSemanticError("Modulo by zero in MOD OF")
+    res = n1 % n2
+  elif op == "BIGGR OF":
+    res = max(n1, n2)
+  elif op == "SMALLR OF":
+    res = min(n1, n2)
+  else:
+    raise LOLSemanticError(f"Unknown arithmetic operator: '{op}'")
+
+  if is_float:
+    return (float(res), "NUMBAR")
+  return (int(res), "NUMBR")
