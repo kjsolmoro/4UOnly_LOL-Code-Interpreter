@@ -97,3 +97,103 @@ def snapshot_symbols(interp):
       "value": format_value(entry["value"], entry["type"])
     })
   return result
+
+# ======================================================================
+# TYPECASTING & COERCION HELPERS
+# ======================================================================
+
+def to_troof(value, type_name):
+  """
+  Implicit/explicit cast to TROOF:
+  - NOOB -> FAIL
+  - TROOF -> value
+  - NUMBR/NUMBAR -> FAIL if 0, else WIN
+  - YARN -> FAIL if "", else WIN
+  """
+  if type_name == "NOOB" or value is None:
+    return False
+  if type_name == "TROOF":
+    return bool(value)
+  if type_name in ["NUMBR", "NUMBAR"]:
+    return value != 0
+  if type_name == "YARN":
+    return len(value) > 0
+  return bool(value)
+
+
+def to_yarn(value, type_name):
+  """
+  Implicit/explicit cast to YARN:
+  - NOOB -> "NOOB" (or "" when explicit, handled in cast_explicit)
+  - TROOF -> "WIN" or "FAIL"
+  - NUMBR -> integer string
+  - NUMBAR -> float string truncated to 2 decimals
+  """
+  return format_value(value, type_name)
+
+
+def to_num(value, type_name):
+  """
+  Implicit cast to numeric for arithmetic operations.
+  Returns (numeric_value, "NUMBR" | "NUMBAR").
+  NOOB cannot be implicitly cast to numeric -> raises LOLSemanticError.
+  """
+  if type_name == "NOOB" or value is None:
+    raise LOLSemanticError("Cannot implicitly cast NOOB to a numerical type")
+
+  if type_name == "TROOF":
+    return (1 if value else 0, "NUMBR")
+
+  if type_name == "NUMBR":
+    return (int(value), "NUMBR")
+
+  if type_name == "NUMBAR":
+    return (float(value), "NUMBAR")
+
+  if type_name == "YARN":
+    s = value.strip()
+    # Try integer first
+    try:
+      return (int(s), "NUMBR")
+    except ValueError:
+      pass
+    # Try float
+    try:
+      return (float(s), "NUMBAR")
+    except ValueError:
+      raise LOLSemanticError(f"Cannot cast YARN \"{value}\" to a numerical type")
+
+  raise LOLSemanticError(f"Unsupported type '{type_name}' for numerical operation")
+
+
+def cast_explicit(value, from_type, target_type):
+  """
+  Explicit typecasting via MAEK or IS NOW A:
+  - Target types: NOOB, TROOF, NUMBR, NUMBAR, YARN
+  """
+  if target_type == "NOOB":
+    return (None, "NOOB")
+
+  if target_type == "TROOF":
+    if from_type == "NOOB":
+      return (False, "TROOF")
+    return (to_troof(value, from_type), "TROOF")
+
+  if target_type == "NUMBR":
+    if from_type == "NOOB":
+      return (0, "NUMBR")
+    val, _ = to_num(value, from_type)
+    return (int(val), "NUMBR")
+
+  if target_type == "NUMBAR":
+    if from_type == "NOOB":
+      return (0.0, "NUMBAR")
+    val, _ = to_num(value, from_type)
+    return (float(val), "NUMBAR")
+
+  if target_type == "YARN":
+    if from_type == "NOOB":
+      return ("", "YARN")
+    return (to_yarn(value, from_type), "YARN")
+
+  raise LOLSemanticError(f"Invalid target type for typecasting: '{target_type}'")
