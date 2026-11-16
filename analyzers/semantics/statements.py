@@ -1,19 +1,7 @@
-#(OwO)==================================================================
-# STATEMENT EXECUTOR
-# Executes statements and code blocks, modifying the interpreter state
-#(OwO)==================================================================
-from analyzers.semantics.helpers import (
-  LOLSemanticError,
-  BreakSignal,
-  ReturnSignal,
-  NeedsInputSignal,
-  declare_symbol,
-  get_symbol,
-  update_symbol,
-  set_it,
-  to_yarn,
-  cast_explicit,
-)
+#==================================================================
+# Executes statements and code blocks
+#==================================================================
+from analyzers.semantics.helpers import LOLSemanticError, BreakSignal, ReturnSignal, NeedsInputSignal, declare_symbol, get_symbol,  update_symbol,  set_it,  to_yarn,  cast_explicit
 from analyzers.semantics.expressions import evaluate_expression
 
 
@@ -21,7 +9,6 @@ def execute_code_block(interp, stmts):
   """
   Executes a sequence of statement AST nodes.
   Iterates through stmts and calls execute_statement for each.
-  Propagates signals (BreakSignal, ReturnSignal) upward.
   """
   pass
 
@@ -34,7 +21,6 @@ def execute_statement(interp, stmt):
   - "print": exec_print
   - "input": exec_input
   - "recast": exec_recast
-  - "break": raises BreakSignal
   - "expression": evaluates expr and updates IT via set_it
   - "if_then", "switch", "loop": delegates to flow_control
   - "func_def", "func_return": delegates to functions
@@ -76,7 +62,6 @@ def exec_input(interp, stmt):
   """
   Handles GIMMEH statement.
   Reads next available input from interp["inputs"] as YARN and updates variable.
-  If input queue is exhausted, raises NeedsInputSignal(var_name).
   """
   pass
 
