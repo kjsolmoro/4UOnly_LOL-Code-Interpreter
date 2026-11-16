@@ -7,38 +7,41 @@ def parse_if_then(parser):
   expect(parser, "O RLY?")
   parse_linebreak(parser)
 
-  parse_if_clause(parser)
-  parse_else_ifs(parser)
-  parse_else_clause(parser)
+  ya_rly = parse_if_clause(parser)
+  mebbes = parse_else_ifs(parser)
+  no_wai = parse_else_clause(parser)
 
   expect(parser, "OIC")
 
+  return {"type": "if_then", "ya_rly": ya_rly, "mebbes": mebbes, "no_wai": no_wai}
 
 def parse_if_clause(parser):
   # <if_clause> ::= YA RLY <linebreak> <code_block>
 
   expect(parser, "YA RLY")
   parse_linebreak(parser)
-  statements.parse_code_block(parser)
+  return statements.parse_code_block(parser)
 
 
 def parse_else_ifs(parser):
   # <else_ifs> ::= ε | MEBBE <expression> <linebreak> <code_block> <else_ifs>
-
-  while peek(parser)[0] == "MEBBE": #handles reccursion nung <else_ifs>
+  mebbes = []
+  while peek(parser)[0] == "MEBBE":
     advance(parser)
-    expressions.parse_expression(parser)
+    condition = expressions.parse_expression(parser)
     parse_linebreak(parser)
-    statements.parse_code_block(parser)
+    body = statements.parse_code_block(parser)
+    mebbes.append({"condition": condition, "body": body})
+  return mebbes
 
 
 def parse_else_clause(parser):
   # <else_clause> ::= ε | NO WAI <linebreak> <code_block>
-
-  if peek(parser)[0] == "NO WAI": #uses if for ε cases
+  if peek(parser)[0] == "NO WAI":
     advance(parser)
     parse_linebreak(parser)
-    statements.parse_code_block(parser)
+    return statements.parse_code_block(parser)
+  return None
 
 # =======================================================================================================
 
@@ -47,34 +50,38 @@ def parse_switch(parser):
   expect(parser, "WTF?")
   parse_linebreak(parser)
 
-  parse_cases(parser)
-  parse_default_case(parser)
+  cases = parse_cases(parser)
+  default = parse_default_case(parser)
 
   expect(parser, "OIC")
 
+  return {"type": "switch", "cases": cases, "default": default}
 
 def parse_cases(parser):
   # <cases> ::= <case> | <case> <cases>
-  parse_case(parser)
-
+  cases = []
+  cases.append(parse_case(parser))
   while peek(parser)[0] == "OMG":
-    parse_case(parser)
+    cases.append(parse_case(parser))
+  return cases
 
 
 def parse_case(parser):
   # <case> ::= OMG <literal> <linebreak> <code_block>
   expect(parser, "OMG")
-  expressions.parse_literal(parser)
+  literal = expressions.parse_literal(parser)
   parse_linebreak(parser)
-  statements.parse_code_block(parser)
+  body = statements.parse_code_block(parser)
+  return {"value": literal, "body": body}
 
 
 def parse_default_case(parser):
   # <default_case> ::= ε | OMGWTF <linebreak> <code_block>
-  if peek(parser)[0] == "OMGWTF": #uses if for ε cases 
+  if peek(parser)[0] == "OMGWTF":
     advance(parser)
     parse_linebreak(parser)
-    statements.parse_code_block(parser)
+    return statements.parse_code_block(parser)
+  return None
 
 # =======================================================================================================
 
@@ -83,20 +90,27 @@ def parse_loop(parser):
   #            <linebreak> <code_block> IM OUTTA YR loopidentifier
 
   expect(parser, "IM IN YR")
-  opening_loop_ident = expect_class(parser, "Loop Identifier", "a loop name")
-  parse_loop_op(parser)
+  opening_label = expect_class(parser, "Loop Identifier", "a loop name")
+  op = parse_loop_op(parser)
   expect(parser, "YR")
-  expect_class(parser, "Variable Identifier", "a variable name")
-  parse_loop_cond(parser)
+  var_token = expect_class(parser, "Variable Identifier", "a variable name")
+  cond = parse_loop_cond(parser)
   parse_linebreak(parser)
-  statements.parse_code_block(parser)
+  body = statements.parse_code_block(parser)
   expect(parser, "IM OUTTA YR")
-  closing_loop_ident = expect_class(parser, "Loop Identifier", "a loop name")
+  closing_label = expect_class(parser, "Loop Identifier", "a loop name")
 
-  # pang check if opening loopIdentifier matches with closing loopIdentifier 
-  if closing_loop_ident[0] != opening_loop_ident[0]:
-    error(parser, f"expected loop name '{opening_loop_ident[0]}'")
+  if closing_label[0] != opening_label[0]:
+    error(parser, f"expected loop name '{opening_label[0]}'")
 
+  return {
+    "type": "loop",
+    "label": opening_label[0],
+    "op": op[0],
+    "var": var_token[0],
+    "cond": cond,
+    "body": body,
+  }
 
 def parse_loop_op(parser):
   # <loop_op> ::= UPPIN | NERFIN
@@ -113,8 +127,7 @@ def parse_loop_cond(parser):
   token, _, _ = peek(parser)
 
   if token in ["TIL", "WILE"]:
-    advance(parser)
-    expressions.parse_expression(parser)
-
-
-# CHECK MO AFTER DINNER BAKS
+    kind_token = advance(parser)
+    expr = expressions.parse_expression(parser)
+    return {"kind": kind_token[0], "expr": expr}
+  return None
