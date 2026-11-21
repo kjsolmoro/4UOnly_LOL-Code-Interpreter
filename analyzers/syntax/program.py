@@ -57,10 +57,10 @@ def parse_declarations(parser):
 
 def parse_declaration(parser):
   # <declaration> ::= I HAS A varident | I HAS A varident <init>
-  expect(parser, "I HAS A")
+  keyword = expect(parser, "I HAS A")
   name_token = expect_class(parser, "Variable Identifier", "a variable name")
   init = parse_init(parser)
-  return {"type": "declare", "var": name_token[0], "init": init}
+  return {"type": "declare", "var": name_token[0], "init": init, "line": keyword[2]}
 
 def parse_init(parser):
   # <init> ::= ε | ITZ <expression>

@@ -168,5 +168,5 @@ def parse_typecast(parser):
   if token == "A":
     expect(parser, "A")
 
-  target_type = advance(parser)
+  target_type = expect_class(parser, "TYPE Literal", "a type (NUMBR, NUMBAR, YARN, TROOF, NOOB)")
   return {"type": "typecast", "operand": operand, "target_type": target_type}

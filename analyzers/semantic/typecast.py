@@ -1,90 +1,28 @@
-#==================================================================
-# Contains Type coercion, symbol table 
-#==================================================================
+import re
+from analyzers.semantic.errors import LOLSemanticError
 
-class LOLSemanticError(Exception):
-  """Raised when a semantic / runtime error occurs in LOLCode."""
-  pass
+VISIBLE_SHOWS_NOOB = True
+COMPARE_NUMERIC_YARNS = True
 
-# ======================================================================
-# SYMBOL TABLE HELPERS
-# ======================================================================
-
-def declare_symbol(interp, name, value=None, type_name="NOOB"):
-  """Declares a new variable in the current symbol table scope."""
-  if name in interp["symbols"]:
-    raise LOLSemanticError(f"Variable '{name}' already declared in current scope")
-  interp["symbols"][name] = {"type": type_name, "value": value}
-
-
-def get_symbol(interp, name):
-  """Retrieves a variable dictionary from the current scope."""
-  if name in interp["symbols"]:
-    return interp["symbols"][name]
-  raise LOLSemanticError(f"Variable '{name}' has not been declared")
-
-
-def update_symbol(interp, name, value, type_name):
-  """Updates an existing variable's value and type in the current scope."""
-  if name not in interp["symbols"]:
-    raise LOLSemanticError(f"Cannot assign to undeclared variable '{name}'")
-  interp["symbols"][name] = {"type": type_name, "value": value}
-
-
-def set_it(interp, value, type_name):
-  """Updates the implicit IT variable in the current scope."""
-  interp["symbols"]["IT"] = {"type": type_name, "value": value}
-
-
-def get_it(interp):
-  """Returns the current (value, type) of IT."""
-  it_entry = interp["symbols"].get("IT", {"type": "NOOB", "value": None})
-  return it_entry["value"], it_entry["type"]
-
-
-def format_value(value, type_name):
-  """Formats a runtime value into its user-facing LOLCode string."""
-  if type_name == "NOOB" or value is None:
+def type_of(value):
+  if value is None:
     return "NOOB"
-  if type_name == "TROOF":
-    return "WIN" if value else "FAIL"
-  if type_name == "NUMBAR":
-    # Truncate to up to two decimal places if needed
-    val_str = str(value)
-    parts = val_str.split('.')
-    if len(parts) == 2 and len(parts[1]) > 2:
-      return f"{parts[0]}.{parts[1][:2]}"
-    return val_str
-  return str(value)
+  if type(value) == bool:
+    return "TROOF"
+  if type(value) == int:
+    return "NUMBR"
+  if type(value) == float:
+    return "NUMBAR"
+  return "YARN"
 
-
-def snapshot_symbols(interp):
-  """Returns a list of dicts for the frontend Symbol Table."""
-  result = []
-  # IT is always first
-  if "IT" in interp["symbols"]:
-    it_entry = interp["symbols"]["IT"]
-    result.append({
-      "identifier": "IT",
-      "type": it_entry["type"],
-      "value": format_value(it_entry["value"], it_entry["type"])
-    })
-
-  for name, entry in interp["symbols"].items():
-    if name == "IT":
-      continue
-    result.append({
-      "identifier": name,
-      "type": entry["type"],
-      "value": format_value(entry["value"], entry["type"])
-    })
-  return result
+def is_number(value):
+  return type_of(value) in ["NUMBR", "NUMBAR"]
 
 # ======================================================================
 # TYPECASTING & COERCION HELPERS
 # ======================================================================
 
-def to_troof(value, type_name):
+def to_troof(value):
   """
   Implicit/explicit cast to TROOF:
   - NOOB -> FAIL
@@ -92,18 +30,35 @@ def to_troof(value, type_name):
   - NUMBR/NUMBAR -> FAIL if 0, else WIN
   - YARN -> FAIL if "", else WIN
   """
-  if type_name == "NOOB" or value is None:
+  if value is None:
     return False
-  if type_name == "TROOF":
-    return bool(value)
-  if type_name in ["NUMBR", "NUMBAR"]:
+  if type(value) == bool:
+    return value
+  if is_number(value):
     return value != 0
-  if type_name == "YARN":
-    return len(value) > 0
-  return bool(value)
+  return value != ""
 
+def numbar_to_yarn(value):
+  text = f"{value:.10f}"
+  whole, decimals = text.split(".")
+  return whole + "." + decimals[:2]
 
-def to_yarn(value, type_name):
+def to_yarn(value):
+    kind = type_of(value)
+    if kind == "NOOB":
+      raise LOLSemanticError("cannot implicitly cast NOOB to a YARN")
+    if kind == "TROOF":
+      if value:
+        return "WIN"
+      else:
+        return "FAIL"
+    if kind == "NUMBR":
+      return str(value)
+    if kind == "NUMBAR":
+      return numbar_to_yarn(value)
+    return value
+
+def yarn_to_number(text):
   """
   Implicit/explicit cast to YARN:
   - NOOB -> "NOOB" (or "" when explicit, handled in cast_explicit)
@@ -111,71 +66,70 @@ def to_yarn(value, type_name):
   - NUMBR -> integer string
   - NUMBAR -> float string truncated to 2 decimals
   """
-  return format_value(value, type_name)
+  if re.fullmatch(r'-?[0-9]+', text):
+    return int(text)
+  if re.fullmatch(r'-?[0-9]+\.[0-9]+', text):
+    return float(text)
+  return None
 
 
-def to_num(value, type_name):
+def to_num(value):
   """
   Implicit cast to numeric for arithmetic operations.
   Returns (numeric_value, "NUMBR" | "NUMBAR").
   NOOB cannot be implicitly cast to numeric -> raises LOLSemanticError.
   """
-  if type_name == "NOOB" or value is None:
-    raise LOLSemanticError("Cannot implicitly cast NOOB to a numerical type")
+  kind = type_of(value)
+  if kind == "NOOB":
+    raise LOLSemanticError("cannot implicitly cast NOOB to a number")
 
-  if type_name == "TROOF":
-    return (1 if value else 0, "NUMBR")
+  if kind == "TROOF":
+    return 1 if value else 0
 
-  if type_name == "NUMBR":
-    return (int(value), "NUMBR")
+  if kind == "NUMBR":
+    return value
 
-  if type_name == "NUMBAR":
-    return (float(value), "NUMBAR")
+  if kind == "NUMBAR":
+    return value
 
-  if type_name == "YARN":
-    s = value.strip()
-    # Try integer first
-    try:
-      return (int(s), "NUMBR")
-    except ValueError:
-      pass
-    # Try float
-    try:
-      return (float(s), "NUMBAR")
-    except ValueError:
-      raise LOLSemanticError(f"Cannot cast YARN \"{value}\" to a numerical type")
+  number = yarn_to_number(value)
+  if number == None:
+    raise LOLSemanticError(f"cannot cast YARN \"{value}\" to a number")
 
-  raise LOLSemanticError(f"Unsupported type '{type_name}' for numerical operation")
+  return number
 
 
-def cast_explicit(value, from_type, target_type):
+def cast_explicit(value, target_type):
   """
   Explicit typecasting via MAEK or IS NOW A:
   - Target types: NOOB, TROOF, NUMBR, NUMBAR, YARN
   """
   if target_type == "NOOB":
-    return (None, "NOOB")
+    return None
 
   if target_type == "TROOF":
-    if from_type == "NOOB":
-      return (False, "TROOF")
-    return (to_troof(value, from_type), "TROOF")
+    return (to_troof(value))
 
   if target_type == "NUMBR":
-    if from_type == "NOOB":
-      return (0, "NUMBR")
-    val, _ = to_num(value, from_type)
-    return (int(val), "NUMBR")
+    if value is None:
+      return 0
+    return int(to_num(value))
 
   if target_type == "NUMBAR":
-    if from_type == "NOOB":
-      return (0.0, "NUMBAR")
-    val, _ = to_num(value, from_type)
-    return (float(val), "NUMBAR")
+    if value is None:
+      return 0.0
+    return float(to_num(value))
 
   if target_type == "YARN":
-    if from_type == "NOOB":
-      return ("", "YARN")
-    return (to_yarn(value, from_type), "YARN")
+    if value is None:
+      return ""
+    return to_yarn(value)
 
   raise LOLSemanticError(f"Invalid target type for typecasting: '{target_type}'")
+
+
+# FOR SYMVBOL TABLE DISPLAY ONLY
+def format_value(value):
+  if value is None:
+    return "NOOB"
+  return to_yarn(value)

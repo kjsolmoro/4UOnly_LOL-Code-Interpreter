@@ -181,7 +181,7 @@ def one_line(code):
 def check_program(code):
   # kung gusto mo magtest na parang buong syntax analyzer na 
   # note: yung may HAI ... KTHXBYE
-  errors = parse(tokenize(preprocess(code)))
+  errors = parse(tokenize(preprocess(code)))["errors"] 
   if errors:
     print("ERROR  |", one_line(code), "->", errors[0])
   else:
