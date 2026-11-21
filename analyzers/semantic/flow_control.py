@@ -6,6 +6,8 @@ from analyzers.semantic.typecast import to_troof, to_num
 from analyzers.semantic.expressions import evaluate_expression, values_equal
 from analyzers.semantic import statements
 
+MAX_LOOP_ITERATIONS = 10000
+
 # ======================================================================
 # IF-THEN CONDITIONAL (O RLY?)
 # ======================================================================
