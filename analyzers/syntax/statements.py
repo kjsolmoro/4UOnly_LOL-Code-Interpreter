@@ -21,32 +21,35 @@ def parse_statement(parser):
   lexeme, classification, line = peek(parser)
 
   if lexeme == "VISIBLE":
-    return parse_print(parser)
+    node = parse_print(parser)
   elif lexeme == "GIMMEH":
-    return parse_input(parser)
+    node = parse_input(parser)
   elif lexeme == "GTFO":
-    return parse_break(parser)
+    node = parse_break(parser)
   elif lexeme == "O RLY?":
-    return flow_control.parse_if_then(parser)
+    node = flow_control.parse_if_then(parser)
   elif lexeme == "WTF?":
-    return flow_control.parse_switch(parser)
+    node = flow_control.parse_switch(parser)
   elif lexeme == "IM IN YR":
-    return flow_control.parse_loop(parser)
+    node = flow_control.parse_loop(parser)
   elif lexeme == "HOW IZ I":
-    return functions.parse_func_def(parser)
+    node = functions.parse_func_def(parser)
   elif lexeme == "FOUND YR":
-    return functions.parse_func_return(parser)
+    node = functions.parse_func_return(parser)
 
   elif classification == "Variable Identifier" and peek_next(parser)[0] == "R":
-    return parse_assignment(parser)
+    node = parse_assignment(parser)
   elif classification == "Variable Identifier" and peek_next(parser)[0] == "IS NOW A":
-    return parse_recast(parser)
+    node = parse_recast(parser)
   elif expressions.is_expression_start(parser):
     expr = expressions.parse_expression(parser)
-    return {"type": "expression", "expr": expr}
+    node = {"type": "expression", "expr": expr}
 
   else:
     error(parser, "expected a statement")
+
+  node["line"] = line
+  return node
 
 
 def parse_print(parser):
@@ -60,9 +63,14 @@ def parse_print_args(parser):
   # <print_args> ::= <expression> | <expression> + <print_args>
   args = []
   args.append(expressions.parse_expression(parser))
-  while peek(parser)[0] == "+":
-    advance(parser)
-    args.append(expressions.parse_expression(parser))
+  while True:
+    if peek(parser)[0] in ["+", "AN"]:
+      advance(parser)
+      args.append(expressions.parse_expression(parser))
+    elif expressions.is_expression_start(parser):
+      args.append(expressions.parse_expression(parser))
+    else:
+      break
   return args
 
 
