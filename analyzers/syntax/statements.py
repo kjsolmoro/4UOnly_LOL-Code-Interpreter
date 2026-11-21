@@ -63,14 +63,10 @@ def parse_print_args(parser):
   # <print_args> ::= <expression> | <expression> + <print_args>
   args = []
   args.append(expressions.parse_expression(parser))
-  while True:
-    if peek(parser)[0] in ["+", "AN"]:
-      advance(parser)
-      args.append(expressions.parse_expression(parser))
-    elif expressions.is_expression_start(parser):
-      args.append(expressions.parse_expression(parser))
-    else:
-      break
+  while peek(parser)[0] == "+":                       
+    advance(parser)
+    args.append(expressions.parse_expression(parser))
+  return args
   return args
 
 
