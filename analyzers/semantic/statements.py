@@ -122,4 +122,12 @@ def exec_recast(stmt, scope, runtime):
   Handles IS NOW A recast statement (varident IS NOW A type).
   Performs explicit typecasting via cast_explicit and updates the variable.
   """
-  raise LOLSemanticError("gawin muna IS NOW A")
+  check_declared(stmt["var"], scope)
+  target_type = stmt["target_type"]
+
+  if isinstance(target_type, (tuple, list)):
+    target_type = target_type[0]
+
+  scope[stmt["var"]] = cast_explicit(scope[stmt["var"]], target_type)
+
+  # raise LOLSemanticError("gawin muna IS NOW A")
