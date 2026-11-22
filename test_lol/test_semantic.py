@@ -408,11 +408,66 @@ def examples():
   print("\nIM IN YR")
   show_ast("HAI\nWAZZUP\n  I HAS A i ITZ 0\nBUHBYE\nIM IN YR lp UPPIN YR i TIL BOTH SAEM i AN 3\n  VISIBLE i\nIM OUTTA YR lp\nKTHXBYE")
 
+
+# =======================================
+# FOR EASIER WRITING OF TEST CODE
+decl_i = ["WAZZUP", "  I HAS A i ITZ 0", "BUHBYE"]
+def prog(*lines):
+  # prog("HAI", "VISIBLE 1", "KTHXBYE") -> "HAI\nVISIBLE 1\nKTHXBYE"
+  return "\n".join(lines)
+# =======================================
+
 def tests():
   print("\n---- test ----")
-  #   check_expr("SMOOSH \"a\" AN 1 AN WIN")
-  #   check_program("HAI\n...\nKTHXBYE")
 
+  print("\n======== CONTROL FLOW STATEMENTS ========")
+  print("\n==== IS NOW A ====")
+  check_program(prog("HAI", "WAZZUP", "  I HAS A x ITZ 5", "BUHBYE",
+                    "x IS NOW A YARN", "KTHXBYE"))
+
+  show_ast(prog("HAI", "WAZZUP", "  I HAS A x ITZ 5", "BUHBYE",
+                      "x IS NOW A YARN", "KTHXBYE")) 
+  print()
+
+  print("\n==== O RLY? ====")
+  check_program(prog("HAI", "BOTH SAEM 1 AN 1", "O RLY?",
+                    "  YA RLY", "    VISIBLE \"yes\"",
+                    "  NO WAI", "    VISIBLE \"no\"",
+                    "OIC", "KTHXBYE"))
+  
+  show_ast(prog("HAI", "BOTH SAEM 1 AN 1", "O RLY?",
+                    "  YA RLY", "    VISIBLE \"yes\"",
+                    "  NO WAI", "    VISIBLE \"no\"",
+                    "OIC", "KTHXBYE"))
+  print()
+
+  print("\n==== WTF? ====")
+  check_program(prog("HAI", "1", "WTF?",
+                    "  OMG 1", "    VISIBLE \"one\"", "    GTFO",
+                    "  OMG 2", "    VISIBLE \"two\"",
+                    "  OMGWTF", "    VISIBLE \"other\"",
+                    "OIC", "KTHXBYE"))
+  show_ast(prog("HAI", "1", "WTF?",
+                    "  OMG 1", "    VISIBLE \"one\"", "    GTFO",
+                    "  OMG 2", "    VISIBLE \"two\"",
+                    "  OMGWTF", "    VISIBLE \"other\"",
+                    "OIC", "KTHXBYE")) 
+  print()
+
+  print("\n==== IM IN YR ====")
+  check_program(prog("HAI", *decl_i,
+                    "IM IN YR lp UPPIN YR i TIL BOTH SAEM i AN 3",
+                    "  VISIBLE i",
+                    "IM OUTTA YR lp", "KTHXBYE"))
+  show_ast(prog("HAI", *decl_i,
+                    "IM IN YR lp UPPIN YR i TIL BOTH SAEM i AN 3",
+                    "  VISIBLE i",
+                    "IM OUTTA YR lp", "KTHXBYE")) 
+  print()
+
+  print("\n==== ERROR DAPAT ====")
+  check_program(prog("HAI", "GTFO", "KTHXBYE"))
+  show_ast(prog("HAI", "GTFO", "KTHXBYE"))
 
 if __name__ == "__main__":
   my_examples()
