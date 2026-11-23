@@ -114,7 +114,15 @@ def exec_input(stmt, scope, runtime):
   Handles GIMMEH statement.
   Reads next available input from interp["inputs"] as YARN and updates variable.
   """
-  raise LOLSemanticError("gawin muna GIMMEH")
+
+  check_declared(stmt["var"], scope)
+  position = runtime["next_input"]
+  if position >= len(runtime["inputs"]):
+    raise NeedsInputSignal(stmt["var"])
+  scope[stmt["var"]] = str(runtime["inputs"][position]) # all inputs are strings (YARN)
+  runtime["next_input"] = position + 1
+
+  # raise LOLSemanticError("gawin muna GIMMEH")
 
 
 def exec_recast(stmt, scope, runtime):

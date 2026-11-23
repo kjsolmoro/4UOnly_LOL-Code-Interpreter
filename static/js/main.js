@@ -24,7 +24,7 @@ function addRow(body, values, extraClass, lineColumn) {
   }
   for (var i = 0; i < values.length; i++) {
     var cell = document.createElement('td');
-    cell.textContent = values[i];
+    cell.textContent = values[i];   // textContent so a YARN like "<b>" is never read as HTML
     if (lineColumn === i) {
       cell.className = 'line';
     }
@@ -84,6 +84,7 @@ skipBtn.onclick = function () {
   overlay.style.display = 'none';
 };
 
+// (3_3) tokens, (4u4) symbol table, (6) console
 function showResult(data) {
   clearBody(tokenBody);
   clearBody(symbolBody);
@@ -97,16 +98,28 @@ function showResult(data) {
     addRow(tokenBody, [t.lexeme, t.classification, t.line], cls, 2);
   }
 
+  // symbols is [] when there are lexical/syntax errors, so the table is simply cleared
   for (var j = 0; j < data.symbols.length; j++) {
-    addRow(symbolBody, [data.symbols[j].identifier, data.symbols[j].value], '', -1);
+    var s = data.symbols[j];
+    var shown = s.value;
+    if (s.type === 'YARN') {
+      shown = '"' + s.value + '"';   // so "12" and 12 look different
+    }
+    addRow(symbolBody, [s.identifier, shown, s.type], '', -1);
   }
 
+  // always REPLACE the console text: every response holds the full output so far
   consoleBox.textContent = data.console;
   statusBox.textContent = data.tokens.length + ' lexemes, ' + data.errors + ' error(s)';
 }
 
 // (5-5) Execute button
-function execute() {
+// GIMMEH: the server is stateless. When it hits a GIMMEH with no input left it
+// answers with need_input = <variable name>. We ask the user, save the answer,
+// and run the whole program again with the longer inputs list.
+var collectedInputs = [];
+
+function sendRun() {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/run');
   xhr.setRequestHeader('Content-Type', 'application/json');
@@ -116,11 +129,37 @@ function execute() {
     }
     if (xhr.status !== 200) {
       consoleBox.textContent = 'Server error (' + xhr.status + '). Make sure the Flask server is running.';
+      runBtn.disabled = false;
       return;
     }
-    showResult(JSON.parse(xhr.responseText));
+
+    var data = JSON.parse(xhr.responseText);
+    showResult(data);
+
+    if (data.need_input) {
+      // let the page paint the partial output before the dialog blocks it
+      setTimeout(function () {
+        var answer = prompt('GIMMEH ' + data.need_input + ':');
+        if (answer === null) {
+          consoleBox.textContent += '\n\n(Input cancelled)';
+          runBtn.disabled = false;
+          return;
+        }
+        collectedInputs.push(answer);
+        sendRun();
+      }, 50);
+      return;
+    }
+
+    runBtn.disabled = false;
   };
-  xhr.send(JSON.stringify({ code: editor.value }));
+  xhr.send(JSON.stringify({ code: editor.value, inputs: collectedInputs }));
+}
+
+function execute() {
+  collectedInputs = [];     // fresh run, forget old answers
+  runBtn.disabled = true;   // no double-clicks while a run is in progress
+  sendRun();
 }
 
 runBtn.onclick = execute;
