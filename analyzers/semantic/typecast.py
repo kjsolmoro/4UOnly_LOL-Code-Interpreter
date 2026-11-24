@@ -2,7 +2,7 @@ import re
 from analyzers.semantic.errors import LOLSemanticError
 
 VISIBLE_SHOWS_NOOB = True
-COMPARE_NUMERIC_YARNS = True
+COMPARE_NUMERIC_YARNS = False
 
 def type_of(value):
   if value is None:
